@@ -22,11 +22,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install feedparser requests beautifulsoup4 python-dateutil lxml
+          pip install requests feedparser pytz google-generativeai
 
       - name: Run script
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           NOTION_READING_DATABASE_ID: ${{ secrets.NOTION_READING_DATABASE_ID }}
           NOTION_URL_DATABASE_ID: ${{ secrets.NOTION_URL_DATABASE_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python Notion_Update_v4.0.py

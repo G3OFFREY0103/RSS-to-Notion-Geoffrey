@@ -12,7 +12,7 @@ NOTION_READING_DATABASE_ID = os.getenv('NOTION_READING_DATABASE_ID')
 NOTION_URL_DATABASE_ID = os.getenv('NOTION_URL_DATABASE_ID')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') # 获取 Gemini Key
 
-# --- 请复制并替换原有的 Gemini 配置代码块 ---
+# --- 请复制以下代码，替换原文件中配置 Gemini 的那一段 ---
 if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
@@ -20,18 +20,29 @@ if GEMINI_API_KEY:
         # --- 调试代码开始：打印所有可用模型 ---
         print("正在查询可用模型列表...")
         available_models = []
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                print(f"发现可用模型: {m.name}")
-                available_models.append(m.name)
+        try:
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    print(f"发现可用模型: {m.name}")
+                    available_models.append(m.name)
+        except Exception as e:
+             print(f"获取模型列表失败(不影响后续运行): {e}")
         # --- 调试代码结束 ---
 
         # 尝试使用 flash 模型，如果列表里没有，就自动换一个存在的
-        target_model = 'gemini-1.5-flash'
-        if 'models/gemini-1.5-flash' not in available_models and 'gemini-1.5-flash' not in available_models:
+        # 注意：有时候 API 返回 'models/gemini-2.5-flash'，有时候返回 'gemini-2.5-flash'
+        target_model = 'gemini-2.5-flash'
+        
+        # 简单的模糊匹配检查
+        is_flash_available = any('gemini-2.5-flash' in m for m in available_models)
+        
+        if not is_flash_available:
             print(f"警告：未找到 {target_model}，尝试使用 gemini-pro")
             target_model = 'gemini-pro'
         
+        # 如果你有 gemini-2.5-flash，这里强制指定（根据你之前的日志）
+        # target_model = 'models/gemini-2.5-flash' 
+
         model = genai.GenerativeModel(target_model)
         print(f"Gemini AI 模型配置成功，使用模型: {target_model}")
         
@@ -41,7 +52,7 @@ if GEMINI_API_KEY:
 else:
     model = None
     print("Warning: 未检测到 GEMINI_API_KEY，AI 总结功能将不启用。")
-# ----------------------------------------
+# ----------------------------------------------------
 
 def update():
 
