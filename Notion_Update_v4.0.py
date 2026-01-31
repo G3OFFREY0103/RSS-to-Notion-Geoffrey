@@ -12,25 +12,42 @@ NOTION_READING_DATABASE_ID = os.getenv('NOTION_READING_DATABASE_ID')
 NOTION_URL_DATABASE_ID = os.getenv('NOTION_URL_DATABASE_ID')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') # 获取 Gemini Key
 
-# 配置 Gemini
+# --- 请复制以下代码，替换原文件中配置 Gemini 的那一段 ---
 if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        # --- 插入这段调试代码 ---
-    print("正在查询可用模型列表...")
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            print(f"可用模型: {m.name}")
-    # -----------------------
-        # 使用 flash 模型，速度快且免费额度高
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        print("Gemini AI 模型配置成功")
+        
+        # --- 调试代码：查看所有可用模型 ---
+        print("====== 正在查询 Google AI 可用模型 ======")
+        valid_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                print(f"发现模型: {m.name}")
+                valid_models.append(m.name)
+        print("=========================================")
+        
+        # 优先使用 flash，如果列表中没有，尝试使用 pro
+        target_model = 'gemini-1.5-flash'
+        
+        # 简单的自动降级逻辑
+        # 注意：API有时候返回 'models/gemini-1.5-flash'，有时候是 'gemini-1.5-flash'
+        # 所以我们需要模糊匹配一下
+        is_flash_available = any('gemini-1.5-flash' in m for m in valid_models)
+        
+        if not is_flash_available:
+            print(f"警告: 列表中未找到 {target_model}，自动切换为 gemini-pro")
+            target_model = 'gemini-pro'
+            
+        model = genai.GenerativeModel(target_model)
+        print(f"Gemini 配置成功，当前使用模型: {target_model}")
+
     except Exception as e:
-        print(f"Gemini 配置出错: {e}")
+        print(f"Gemini 配置发生错误: {e}")
         model = None
 else:
     model = None
     print("Warning: 未检测到 GEMINI_API_KEY，AI 总结功能将不启用。")
+# ----------------------------------------------------
 
 def update():
 
