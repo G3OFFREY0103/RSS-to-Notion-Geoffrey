@@ -14,6 +14,7 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') # 获取 Gemini Key
 
 # --- 请复制以下代码，替换原文件中配置 Gemini 的那一段 ---
 if GEMINI_API_KEY:
+    
     try:
     # 你的列表里明确有这个名字，直接用，不用猜了
     target_model = 'models/gemini-2.5-flash' 
