@@ -16,6 +16,12 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') # 获取 Gemini Key
 if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
+        # --- 插入这段调试代码 ---
+    print("正在查询可用模型列表...")
+    for m in genai.list_models():
+        if 'generateContent' in m.supported_generation_methods:
+            print(f"可用模型: {m.name}")
+    # -----------------------
         # 使用 flash 模型，速度快且免费额度高
         model = genai.GenerativeModel('gemini-1.5-flash')
         print("Gemini AI 模型配置成功")
