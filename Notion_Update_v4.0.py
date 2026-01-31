@@ -12,19 +12,36 @@ NOTION_READING_DATABASE_ID = os.getenv('NOTION_READING_DATABASE_ID')
 NOTION_URL_DATABASE_ID = os.getenv('NOTION_URL_DATABASE_ID')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') # 获取 Gemini Key
 
-# 配置 Gemini
+# --- 请复制并替换原有的 Gemini 配置代码块 ---
 if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        # 使用 flash 模型，速度快且免费额度高
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        print("Gemini AI 模型配置成功")
+        
+        # --- 调试代码开始：打印所有可用模型 ---
+        print("正在查询可用模型列表...")
+        available_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                print(f"发现可用模型: {m.name}")
+                available_models.append(m.name)
+        # --- 调试代码结束 ---
+
+        # 尝试使用 flash 模型，如果列表里没有，就自动换一个存在的
+        target_model = 'gemini-1.5-flash'
+        if 'models/gemini-1.5-flash' not in available_models and 'gemini-1.5-flash' not in available_models:
+            print(f"警告：未找到 {target_model}，尝试使用 gemini-pro")
+            target_model = 'gemini-pro'
+        
+        model = genai.GenerativeModel(target_model)
+        print(f"Gemini AI 模型配置成功，使用模型: {target_model}")
+        
     except Exception as e:
         print(f"Gemini 配置出错: {e}")
         model = None
 else:
     model = None
     print("Warning: 未检测到 GEMINI_API_KEY，AI 总结功能将不启用。")
+# ----------------------------------------
 
 def update():
 
