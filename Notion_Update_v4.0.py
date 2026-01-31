@@ -14,19 +14,44 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') # 获取 Gemini Key
 
 # --- 请复制以下代码，替换原文件中配置 Gemini 的那一段 ---
 if GEMINI_API_KEY:
-    
     try:
-    # 你的列表里明确有这个名字，直接用，不用猜了
-    target_model = 'models/gemini-2.5-flash' 
-    
-    print(f"正在配置模型: {target_model} ...")
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel(target_model)
-    print("✅ 模型配置成功！")
+        genai.configure(api_key=GEMINI_API_KEY)
+        
+        # --- 调试代码开始：打印所有可用模型 ---
+        print("正在查询可用模型列表...")
+        available_models = []
+        try:
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    print(f"发现可用模型: {m.name}")
+                    available_models.append(m.name)
+        except Exception as e:
+             print(f"获取模型列表失败(不影响后续运行): {e}")
+        # --- 调试代码结束 ---
 
-except Exception as e:
-    print(f"❌ 模型配置失败: {e}")
+        # 尝试使用 flash 模型，如果列表里没有，就自动换一个存在的
+        # 注意：有时候 API 返回 'models/gemini-2.5-flash'，有时候返回 'gemini-2.5-flash'
+        target_model = 'gemini-2.5-flash'
+        
+        # 简单的模糊匹配检查
+        is_flash_available = any('gemini-2.5-flash' in m for m in available_models)
+        
+        if not is_flash_available:
+            print(f"警告：未找到 {target_model}，尝试使用 gemini-pro")
+            target_model = 'gemini-pro'
+        
+        # 如果你有 gemini-2.5-flash，这里强制指定（根据你之前的日志）
+        # target_model = 'models/gemini-2.5-flash' 
+
+        model = genai.GenerativeModel(target_model)
+        print(f"Gemini AI 模型配置成功，使用模型: {target_model}")
+        
+    except Exception as e:
+        print(f"Gemini 配置出错: {e}")
+        model = None
+else:
     model = None
+    print("Warning: 未检测到 GEMINI_API_KEY，AI 总结功能将不启用。")
 # ----------------------------------------------------
 
 def update():
